@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#05050f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="application-name" content="KRONOS">
+<title>KRONOS — Guerrero de Luz</title>
+<style>
+:root{
+  --bg:#05050f;--bg2:#09091b;--card:#0e0e22;--card2:#12122a;
+  --gold:#c9a84c;--gold2:#ffd700;--gold3:#ffe566;
+  --blue:#4a9eff;--blue2:#7bbfff;--blue3:#b8d9ff;
+  --text:#e8e8f5;--dim:#6a6a8a;--dim2:#4a4a6a;
+  --red:#ef4444;--green:#22c55e;--purple:#a855f7;
+  --border:rgba(201,168,76,.2);--border2:rgba(74,158,255,.2);
+  --r:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;overflow-x:hidden}
+body{padding-bottom:72px}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--gold);border-radius:2px}
+
+/* ── HEADER ── */
+.app-header{
+  background:linear-gradient(180deg,rgba(5,5,15,.99),rgba(5,5,15,.92));
+  border-bottom:1px solid var(--border);
+  padding:10px 16px 8px;position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  backdrop-filter:blur(20px);
+}
+.app-title{
+  font-family:Georgia,serif;font-size:1.5rem;color:var(--gold2);
+  text-shadow:0 0 30px rgba(255,215,0,.6);letter-spacing:4px;font-style:italic;
+}
+.app-date{font-size:.7rem;color:var(--dim);text-align:right;line-height:1.5}
+.app-date span{color:var(--gold);display:block}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;height:72px;
+  background:rgba(5,5,15,.97);border-top:1px solid var(--border);
+  display:flex;z-index:200;backdrop-filter:blur(20px);
+}
+.nav-btn{
+  flex:1;padding:6px 2px 10px;border:none;background:transparent;
+  color:var(--dim);cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;gap:2px;transition:color .2s;font-size:.6rem;
+  letter-spacing:.5px;text-transform:uppercase;
+}
+.nav-btn .ni{font-size:1.4rem;transition:filter .2s,transform .2s}
+.nav-btn.active{color:var(--gold2)}
+.nav-btn.active .ni{filter:drop-shadow(0 0 8px var(--gold2));transform:translateY(-2px)}
+
+/* ── TABS ── */
+.tab-panel{display:none;padding:16px;max-width:620px;margin:0 auto;animation:fadeUp .3s ease}
+.tab-panel.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── CARDS ── */
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:16px;margin-bottom:14px;
+  position:relative;overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.4;
+}
+.card-title{
+  font-family:Georgia,serif;font-size:.85rem;color:var(--gold);
+  text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;
+  display:flex;align-items:center;gap:8px;
+}
+.card-title::before,.card-title::after{content:'';height:1px;background:linear-gradient(90deg,var(--gold),transparent);opacity:.5}
+.card-title::before{width:16px;flex-shrink:0}
+.card-title::after{flex:1}
+
+/* ── CHARACTER MODULE ── */
+.char-wrap{text-align:center;padding:8px 0 4px}
+#char-svg-container{
+  display:inline-block;margin-bottom:12px;
+  filter:drop-shadow(0 0 20px rgba(74,158,255,.7));
+  animation:float 4s ease-in-out infinite;
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.char-name{
+  font-family:Georgia,serif;font-size:1.8rem;color:var(--gold2);
+  text-shadow:0 0 30px rgba(255,215,0,.7);margin-bottom:4px;
+}
+.char-title{
+  font-size:.75rem;color:var(--blue2);letter-spacing:3px;
+  text-transform:uppercase;margin-bottom:16px;
+}
+.level-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:8px}
+.level-badge{
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:#000;font-family:Georgia,serif;font-size:.75rem;font-weight:bold;
+  padding:4px 12px;border-radius:20px;letter-spacing:1px;
+}
+.xp-info{font-size:.72rem;color:var(--dim)}
+.xp-bar-outer{
+  background:rgba(0,0,0,.5);border-radius:20px;height:10px;
+  overflow:hidden;margin:6px 0 4px;border:1px solid var(--border);
+}
+.xp-bar-inner{
+  height:100%;background:linear-gradient(90deg,#b8860b,var(--gold2),#fff8a0);
+  border-radius:20px;transition:width .9s cubic-bezier(.4,0,.2,1);
+  position:relative;
+}
+.xp-bar-inner::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.5) 50%,transparent 100%);
+  background-size:200% 100%;animation:shine 2.5s infinite;
+}
+@keyframes shine{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.xp-numbers{font-size:.7rem;color:var(--dim);margin-bottom:10px}
+.streak-row{display:flex;justify-content:center;gap:16px;margin-bottom:4px}
+.streak-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(255,100,30,.12);border:1px solid rgba(255,100,30,.35);
+  border-radius:20px;padding:5px 14px;font-size:.82rem;
+}
+.streak-fire{animation:flicker 1.4s ease-in-out infinite}
+@keyframes flicker{0%,100%{transform:scale(1) rotate(0)}40%{transform:scale(1.15) rotate(-5deg)}70%{transform:scale(1.05) rotate(3deg)}}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+@media(min-width:480px){.stats-grid{grid-template-columns:repeat(3,1fr)}}
+.stat-card{
+  background:rgba(0,0,0,.35);border:1px solid var(--border);
+  border-radius:10px;padding:10px 10px 8px;
+}
+.stat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.stat-icon{font-size:1.1rem}
+.stat-label{font-size:.62rem;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+.stat-value{font-family:Georgia,serif;font-size:1.2rem;color:var(--gold2);line-height:1}
+.stat-bar-bg{height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+.stat-bar-fg{height:100%;border-radius:2px;transition:width .8s ease}
+.s-fuerza{background:linear-gradient(90deg,#ff6b35,#ffaa80)}
+.s-mente{background:linear-gradient(90deg,#4a9eff,#7bbfff)}
+.s-espiritu{background:linear-gradient(90deg,#c9a84c,#ffd700)}
+.s-destreza{background:linear-gradient(90deg,#a855f7,#c084fc)}
+.s-vitalidad{background:linear-gradient(90deg,#22c55e,#4ade80)}
+.s-resistencia{background:linear-gradient(90deg,#ef4444,#f87171)}
+
+/* ── HABITS MODULE ── */
+.habit-item{
+  display:flex;align-items:center;gap:10px;padding:9px 0;
+  border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;
+  transition:opacity .2s;user-select:none;
+}
+.habit-item:last-child{border-bottom:none}
+.habit-item.done{opacity:.55}
+.habit-item.done .habit-label{text-decoration:line-through;color:var(--dim)}
+.habit-cb{
+  width:22px;height:22px;border-radius:6px;border:2px solid var(--gold);
+  background:transparent;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;transition:all .2s;
+}
+.habit-item.done .habit-cb{background:var(--gold);border-color:var(--gold2)}
+.habit-cb::after{content:'✓';color:#000;font-size:.8rem;font-weight:bold;opacity:0;transition:opacity .15s}
+.habit-item.done .habit-cb::after{opacity:1}
+.habit-label{font-size:.84rem;flex:1;line-height:1.3}
+.habit-xp{font-size:.68rem;color:var(--gold);opacity:.6;white-space:nowrap}
+
+.section-header{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;
+}
+.section-progress{font-size:.72rem;color:var(--dim)}
+
+.task-row{display:flex;gap:8px;margin-bottom:10px}
+.task-input{
+  flex:1;background:rgba(0,0,0,.4);border:1px solid var(--border);
+  border-radius:8px;padding:8px 12px;color:var(--text);font-size:.84rem;
+  outline:none;transition:border-color .2s;font-family:inherit;
+}
+.task-input:focus{border-color:var(--gold)}
+textarea.task-input{resize:vertical;min-height:72px;line-height:1.6}
+
+.btn{
+  background:linear-gradient(135deg,#a87830,var(--gold2));
+  color:#000;border:none;border-radius:8px;padding:8px 16px;
+  font-size:.8rem;font-weight:700;cursor:pointer;
+  transition:all .2s;white-space:nowrap;font-family:inherit;
+}
+.btn:active{transform:scale(.97)}
+.btn-sm{padding:5px 10px;font-size:.72rem}
+.btn-ghost{
+  background:transparent;border:1px solid var(--border);color:var(--dim2);
+  border-radius:8px;padding:6px 12px;font-size:.75rem;cursor:pointer;
+  transition:all .2s;font-family:inherit;
+}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.btn-danger{
+  background:transparent;border:1px solid rgba(239,68,68,.4);color:rgba(239,68,68,.7);
+  border-radius:8px;padding:5px 10px;font-size:.72rem;cursor:pointer;
+  transition:all .2s;font-family:inherit;
+}
+.btn-danger:hover{background:rgba(239,68,68,.1);color:var(--red)}
+
+.task-list{list-style:none}
+.task-list-item{
+  display:flex;align-items:center;gap:8px;padding:7px 0;
+  border-bottom:1px solid rgba(255,255,255,.04);
+}
+.task-list-item:last-child{border-bottom:none}
+.task-list-item.done .task-text{text-decoration:line-through;color:var(--dim)}
+.task-del{
+  background:none;border:none;color:var(--dim2);cursor:pointer;
+  font-size:1rem;padding:2px 6px;border-radius:4px;transition:color .2s;margin-left:auto;
+}
+.task-del:hover{color:var(--red)}
+
+/* ── POMODORO MODULE ── */
+.pomo-wrap{text-align:center}
+.pomo-ring{position:relative;width:200px;height:200px;margin:8px auto 16px;display:inline-block}
+.pomo-svg{display:block;transform:rotate(-90deg)}
+.pomo-track{fill:none;stroke:rgba(255,255,255,.07);stroke-width:12}
+.pomo-progress{
+  fill:none;stroke:var(--blue);stroke-width:12;stroke-linecap:round;
+  stroke-dasharray:565;stroke-dashoffset:0;
+  transition:stroke-dashoffset .6s linear, stroke .3s;
+  filter:drop-shadow(0 0 10px var(--blue));
+}
+.pomo-ring-inner{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  text-align:center;pointer-events:none;
+}
+.pomo-digits{
+  font-family:Georgia,serif;font-size:2.6rem;color:var(--text);
+  letter-spacing:3px;line-height:1;text-shadow:0 0 20px rgba(255,255,255,.3);
+}
+.pomo-mode-label{
+  font-size:.65rem;color:var(--dim);text-transform:uppercase;
+  letter-spacing:3px;margin-top:4px;
+}
+.pomo-controls{display:flex;justify-content:center;gap:10px;margin-bottom:16px}
+.pomo-btn{
+  padding:10px 22px;border:1px solid var(--border2);background:rgba(74,158,255,.1);
+  color:var(--blue2);border-radius:10px;font-size:.85rem;cursor:pointer;
+  transition:all .2s;font-family:inherit;font-weight:600;
+}
+.pomo-btn:hover{background:rgba(74,158,255,.2);border-color:var(--blue)}
+.pomo-btn.primary{background:linear-gradient(135deg,#1a4a9a,var(--blue));color:#fff;border-color:var(--blue)}
+.pomo-btn.primary:hover{box-shadow:0 0 20px rgba(74,158,255,.4)}
+
+.energy-section{margin:0 0 12px}
+.energy-label{font-size:.7rem;color:var(--dim);margin-bottom:5px;display:flex;justify-content:space-between}
+.energy-bar-bg{background:rgba(0,0,0,.4);border-radius:4px;height:8px;border:1px solid var(--border2);overflow:hidden}
+.energy-bar-fg{
+  height:100%;background:linear-gradient(90deg,#1a3a8a,var(--blue),var(--blue2));
+  border-radius:4px;transition:width .6s ease;
+  box-shadow:0 0 8px rgba(74,158,255,.5);
+}
+.pomo-dots{display:flex;justify-content:center;gap:10px;margin-top:10px}
+.pomo-dot{
+  width:16px;height:16px;border-radius:50%;
+  border:2px solid rgba(74,158,255,.4);background:transparent;
+  transition:all .3s;
+}
+.pomo-dot.active{background:var(--blue);border-color:var(--blue);box-shadow:0 0 10px var(--blue)}
+.pomo-dot.bonus{background:var(--gold2);border-color:var(--gold2);box-shadow:0 0 14px var(--gold2)}
+.pomo-stats-row{
+  display:flex;justify-content:center;gap:24px;margin-top:12px;
+  background:rgba(0,0,0,.3);border-radius:8px;padding:10px;
+}
+.pomo-stat-item{text-align:center}
+.pomo-stat-val{font-family:Georgia,serif;font-size:1.4rem;color:var(--gold2)}
+.pomo-stat-lbl{font-size:.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+
+/* ── NUTRITION MODULE ── */
+.meal-block{margin-bottom:8px}
+.meal-time-header{
+  font-size:.78rem;color:var(--blue2);letter-spacing:1px;
+  display:flex;align-items:center;gap:8px;margin-bottom:8px;
+  padding:5px 0;border-bottom:1px solid var(--border2);
+}
+.meal-time-badge{
+  background:rgba(74,158,255,.15);border:1px solid rgba(74,158,255,.3);
+  border-radius:12px;padding:2px 10px;font-size:.68rem;flex-shrink:0;
+}
+.nutr-habit{
+  display:flex;align-items:center;gap:8px;padding:6px 0;
+  cursor:pointer;user-select:none;transition:opacity .2s;
+  border-bottom:1px solid rgba(255,255,255,.03);
+}
+.nutr-habit:last-child{border-bottom:none}
+.nutr-habit.done{opacity:.5}
+.nutr-habit.done .nutr-label{text-decoration:line-through;color:var(--dim)}
+.nutr-cb{
+  width:18px;height:18px;border-radius:4px;border:1.5px solid var(--green);
+  background:transparent;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;transition:all .2s;
+}
+.nutr-habit.done .nutr-cb{background:var(--green)}
+.nutr-cb::after{content:'✓';color:#000;font-size:.65rem;font-weight:bold;opacity:0;transition:opacity .15s}
+.nutr-habit.done .nutr-cb::after{opacity:1}
+.nutr-label{font-size:.82rem;flex:1}
+.nutr-xp{font-size:.65rem;color:var(--green);opacity:.7}
+.nutr-progress-bar{height:4px;background:rgba(0,0,0,.3);border-radius:2px;overflow:hidden;margin-bottom:12px}
+.nutr-progress-fill{height:100%;background:linear-gradient(90deg,var(--green),#4ade80);border-radius:2px;transition:width .5s}
+
+/* ── REFLECTION MODULE ── */
+.slider-wrap{margin:12px 0}
+.slider-top{display:flex;justify-content:space-between;font-size:.75rem;color:var(--dim);margin-bottom:8px}
+.slider-val{font-family:Georgia,serif;font-size:2rem;color:var(--gold2);text-align:center;margin:6px 0}
+input[type=range]{
+  width:100%;-webkit-appearance:none;height:6px;
+  background:linear-gradient(90deg,var(--blue),var(--gold2));
+  border-radius:3px;outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+  background:var(--gold2);cursor:pointer;
+  box-shadow:0 0 12px rgba(255,215,0,.6),0 2px 6px rgba(0,0,0,.4);
+}
+.obj-grid{display:flex;gap:8px}
+.obj-btn{
+  flex:1;padding:9px 4px;border-radius:8px;border:1px solid var(--border);
+  background:transparent;color:var(--dim);cursor:pointer;font-size:.8rem;
+  transition:all .2s;font-family:inherit;
+}
+.obj-btn.si.sel{border-color:var(--green);background:rgba(34,197,94,.12);color:#4ade80}
+.obj-btn.par.sel{border-color:var(--gold);background:rgba(201,168,76,.12);color:var(--gold2)}
+.obj-btn.no.sel{border-color:var(--red);background:rgba(239,68,68,.12);color:#f87171}
+
+.close-day-btn{
+  width:100%;padding:15px;margin-top:8px;
+  background:linear-gradient(135deg,#7a5010,var(--gold2));
+  color:#000;border:none;border-radius:10px;
+  font-family:Georgia,serif;font-size:1rem;font-weight:bold;
+  letter-spacing:3px;cursor:pointer;transition:all .3s;text-transform:uppercase;
+}
+.close-day-btn:hover{box-shadow:0 0 35px rgba(255,215,0,.45);transform:translateY(-2px)}
+.close-day-btn:active{transform:translateY(0)}
+.export-btn{
+  width:100%;padding:10px;margin-top:8px;
+  background:transparent;border:1px solid rgba(74,158,255,.4);
+  color:var(--blue2);border-radius:8px;cursor:pointer;
+  font-size:.8rem;transition:all .2s;font-family:inherit;
+}
+.export-btn:hover{background:rgba(74,158,255,.1);border-color:var(--blue)}
+
+/* ── XP POPUP ── */
+#xp-popup{
+  position:fixed;top:75px;left:50%;transform:translateX(-50%) translateY(-15px);
+  background:linear-gradient(135deg,rgba(9,9,27,.97),rgba(15,15,36,.97));
+  border:1px solid var(--gold);border-radius:12px;padding:10px 22px;
+  color:var(--gold2);font-family:Georgia,serif;font-size:.95rem;
+  pointer-events:none;z-index:500;opacity:0;
+  transition:opacity .3s, transform .3s;
+  white-space:nowrap;box-shadow:0 0 25px rgba(255,215,0,.25);
+}
+#xp-popup.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── LEVEL UP OVERLAY ── */
+#levelup-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:600;
+  display:none;align-items:center;justify-content:center;
+  flex-direction:column;text-align:center;
+}
+#levelup-overlay.show{display:flex}
+.lu-sparkle{font-size:3rem;animation:spinPulse 1s linear infinite;margin-bottom:8px}
+@keyframes spinPulse{0%{transform:rotate(0) scale(1)}50%{transform:rotate(180deg) scale(1.2)}100%{transform:rotate(360deg) scale(1)}}
+.lu-title{font-family:Georgia,serif;font-size:1.5rem;color:var(--gold);letter-spacing:4px;text-transform:uppercase}
+.lu-level{font-family:Georgia,serif;font-size:5rem;color:var(--gold2);
+  text-shadow:0 0 60px rgba(255,215,0,1);line-height:1;margin:8px 0;
+  animation:pulse 1s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.lu-rank{font-size:.9rem;color:var(--blue2);letter-spacing:3px;text-transform:uppercase;margin-bottom:24px}
+.lu-close{
+  padding:10px 30px;background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:#000;border:none;border-radius:8px;font-size:.9rem;font-weight:bold;
+  cursor:pointer;font-family:inherit;
+}
+
+/* ── BONUS OVERLAY ── */
+#bonus-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:550;
+  display:none;align-items:center;justify-content:center;flex-direction:column;
+}
+#bonus-overlay.show{display:flex}
+.bonus-ring{
+  width:140px;height:140px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(255,215,0,.2),rgba(255,215,0,.05));
+  border:3px solid var(--gold2);display:flex;align-items:center;justify-content:center;
+  flex-direction:column;animation:bonusPulse 1s ease infinite;
+  box-shadow:0 0 60px rgba(255,215,0,.5);margin-bottom:16px;
+}
+@keyframes bonusPulse{0%,100%{box-shadow:0 0 60px rgba(255,215,0,.5)}50%{box-shadow:0 0 100px rgba(255,215,0,.9)}}
+.bonus-x{font-family:Georgia,serif;font-size:3rem;color:var(--gold2)}
+.bonus-text{font-size:.9rem;color:var(--gold);letter-spacing:2px}
+
+/* ── PARTICLES ── */
+.particle{
+  position:fixed;pointer-events:none;z-index:700;
+  font-size:1.2rem;animation:particleFly 1.5s ease-out forwards;
+}
+@keyframes particleFly{
+  0%{opacity:1;transform:translateY(0) scale(1)}
+  100%{opacity:0;transform:translateY(-120px) scale(.3)}
+}
+
+/* ── MISC ── */
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:12px 0}
+.empty-state{text-align:center;color:var(--dim);font-size:.8rem;padding:16px;font-style:italic}
+.tag{
+  display:inline-block;font-size:.65rem;background:rgba(74,158,255,.15);
+  border:1px solid rgba(74,158,255,.3);color:var(--blue2);
+  border-radius:10px;padding:1px 8px;margin-left:6px;
+}
+.weekly-badge{
+  display:inline-block;font-size:.65rem;background:rgba(168,85,247,.15);
+  border:1px solid rgba(168,85,247,.3);color:#c084fc;
+  border-radius:10px;padding:1px 8px;margin-left:6px;
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="app-header">
+  <div class="app-title">⚔ KRONOS</div>
+  <div class="app-date" id="header-date"></div>
+</header>
+
+<!-- XP POPUP -->
+<div id="xp-popup">+0 XP</div>
+
+<!-- LEVEL UP OVERLAY -->
+<div id="levelup-overlay">
+  <div class="lu-sparkle">✦</div>
+  <div class="lu-title">¡Subiste de Nivel!</div>
+  <div class="lu-level" id="lu-level-num">2</div>
+  <div class="lu-rank" id="lu-rank-text">Peregrino de la Luz</div>
+  <button class="lu-close" onclick="closeLevelUp()">Continuar la Gesta</button>
+</div>
+
+<!-- BONUS OVERLAY -->
+<div id="bonus-overlay">
+  <div class="bonus-ring">
+    <div class="bonus-x">×2</div>
+  </div>
+  <div style="font-family:Georgia,serif;font-size:1.1rem;color:var(--gold2);letter-spacing:2px">¡GRAN FORJA!</div>
+  <div style="font-size:.8rem;color:var(--dim);margin-top:6px">4 Pomodoros consecutivos completados</div>
+  <button class="lu-close" style="margin-top:20px" onclick="closeBonusOverlay()">¡Adelante!</button>
+</div>
+
+<!-- ══════════ TAB 1: PERSONAJE ══════════ -->
+<div id="tab-character" class="tab-panel active">
+  <div class="card">
+    <div class="char-wrap">
+      <div id="char-svg-container"></div>
+      <div class="char-name">Javier</div>
+      <div class="char-title" id="char-title-text">Peregrino de la Luz</div>
+      <div class="level-row">
+        <div class="level-badge" id="level-badge">NIVEL 1</div>
+        <div class="xp-info" id="xp-info">0 / 100 XP</div>
+      </div>
+      <div class="xp-bar-outer">
+        <div class="xp-bar-inner" id="xp-bar" style="width:0%"></div>
+      </div>
+      <div class="xp-numbers" id="xp-numbers">0 XP totales acumulados</div>
+      <div class="streak-row">
+        <div class="streak-badge">
+          <span class="streak-fire">🔥</span>
+          <span id="streak-val">0</span> días de racha
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Estadísticas</div>
+    <div class="stats-grid" id="stats-grid"></div>
+  </div>
+</div>
+
+<!-- ══════════ TAB 2: HÁBITOS ══════════ -->
+<div id="tab-habits" class="tab-panel">
+
+  <!-- SECCIÓN A: Hábitos Fijos -->
+  <div class="card">
+    <div class="section-header">
+      <div class="card-title" style="margin-bottom:0">Hábitos del Día</div>
+      <div class="section-progress" id="habits-progress">0/8</div>
+    </div>
+    <div id="fixed-habits-list"></div>
+  </div>
+
+  <!-- SECCIÓN B: Tareas de Trabajo -->
+  <div class="card">
+    <div class="card-title">Misiones de Hoy <span class="tag">+10 XP</span></div>
+    <div class="task-row">
+      <input type="text" class="task-input" id="task-input" placeholder="Nueva misión..." maxlength="80">
+      <button class="btn btn-sm" onclick="addTask()">+ Añadir</button>
+    </div>
+    <ul class="task-list" id="task-list"></ul>
+    <div style="text-align:right;margin-top:8px">
+      <button class="btn-ghost" onclick="clearCompletedTasks()">Limpiar completadas</button>
+    </div>
+  </div>
+
+  <!-- SECCIÓN C: Mantenimiento -->
+  <div class="card">
+    <div class="section-header">
+      <div class="card-title" style="margin-bottom:0">Mantenimiento <span class="weekly-badge">Semanal</span></div>
+      <div class="section-progress" id="maint-progress">0/6</div>
+    </div>
+    <div id="maintenance-list"></div>
+    <div style="text-align:right;margin-top:8px">
+      <button class="btn-ghost" onclick="resetMaintenance()">Resetear (Lunes)</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TAB 3: LA FORJA ══════════ -->
+<div id="tab-pomodoro" class="tab-panel">
+  <div class="card">
+    <div class="card-title">La Forja del Guerrero</div>
+    <div class="pomo-wrap">
+      <div class="pomo-ring">
+        <svg class="pomo-svg" width="200" height="200" viewBox="0 0 200 200">
+          <circle class="pomo-track" cx="100" cy="100" r="90"/>
+          <circle class="pomo-progress" id="pomo-ring-progress" cx="100" cy="100" r="90"/>
+        </svg>
+        <div class="pomo-ring-inner">
+          <div class="pomo-digits" id="pomo-time-display">25:00</div>
+          <div class="pomo-mode-label" id="pomo-mode-label">Concentración</div>
+        </div>
+      </div>
+
+      <div class="pomo-controls">
+        <button class="pomo-btn" onclick="resetPomodoro()">↺ Reset</button>
+        <button class="pomo-btn primary" id="pomo-start-btn" onclick="togglePomodoro()">▶ Iniciar</button>
+        <button class="pomo-btn" onclick="skipPomodoro()">⏭ Saltar</button>
+      </div>
+
+      <div class="energy-section">
+        <div class="energy-label">
+          <span>⚡ Energía de Foco</span>
+          <span id="energy-pct">0%</span>
+        </div>
+        <div class="energy-bar-bg">
+          <div class="energy-bar-fg" id="energy-bar" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="pomo-dots" id="pomo-dots">
+        <div class="pomo-dot" data-i="0"></div>
+        <div class="pomo-dot" data-i="1"></div>
+        <div class="pomo-dot" data-i="2"></div>
+        <div class="pomo-dot" data-i="3"></div>
+      </div>
+
+      <div class="pomo-stats-row">
+        <div class="pomo-stat-item">
+          <div class="pomo-stat-val" id="pomo-today-count">0</div>
+          <div class="pomo-stat-lbl">Hoy</div>
+        </div>
+        <div class="pomo-stat-item">
+          <div class="pomo-stat-val" id="pomo-consec">0</div>
+          <div class="pomo-stat-lbl">Seguidos</div>
+        </div>
+        <div class="pomo-stat-item">
+          <div class="pomo-stat-val" id="pomo-total-xp">0</div>
+          <div class="pomo-stat-lbl">XP Forja</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="background:rgba(0,0,0,.2)">
+    <div class="card-title">Técnica Pomodoro</div>
+    <div style="font-size:.78rem;color:var(--dim);line-height:1.7">
+      ⚔ <strong style="color:var(--text)">25 min</strong> de batalla concentrada → +15 XP + sube MENTE<br>
+      🛡 <strong style="color:var(--text)">5 min</strong> de descanso sagrado → +5 XP<br>
+      ✨ <strong style="color:var(--text)">4 pomodoros</strong> consecutivos → ¡Bonus ×2!
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TAB 4: EL ALQUIMISTA ══════════ -->
+<div id="tab-nutrition" class="tab-panel">
+  <div class="card">
+    <div class="section-header">
+      <div class="card-title" style="margin-bottom:0">El Alquimista</div>
+      <div class="section-progress" id="nutr-progress">0/0</div>
+    </div>
+    <div class="nutr-progress-bar">
+      <div class="nutr-progress-fill" id="nutr-bar" style="width:0%"></div>
+    </div>
+    <div id="nutrition-list"></div>
+  </div>
+</div>
+
+<!-- ══════════ TAB 5: REFLEXIÓN ══════════ -->
+<div id="tab-reflection" class="tab-panel">
+  <div class="card">
+    <div class="card-title">Cierre del Día</div>
+
+    <div style="font-size:.78rem;color:var(--dim);margin-bottom:12px">¿Cómo fue tu día, guerrero?</div>
+
+    <div class="slider-wrap">
+      <div class="slider-top"><span>Puntuación del Día</span><span id="day-score-label">5</span></div>
+      <input type="range" min="1" max="10" value="5" id="day-score-slider" oninput="updateDayScore(this.value)">
+      <div class="slider-val" id="day-score-val">5</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div style="margin-bottom:12px">
+      <div style="font-size:.78rem;color:var(--dim);margin-bottom:8px">¿Logré mi objetivo principal?</div>
+      <div class="obj-grid">
+        <button class="obj-btn si" onclick="selectObj('si')">✅ Sí</button>
+        <button class="obj-btn par" onclick="selectObj('par')">⚡ Parcialmente</button>
+        <button class="obj-btn no" onclick="selectObj('no')">❌ No</button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div style="margin-bottom:10px">
+      <div style="font-size:.75rem;color:var(--dim);margin-bottom:6px">Una frase sobre hoy...</div>
+      <textarea class="task-input" id="reflection-today" placeholder="Hoy fue un día de..." rows="2"></textarea>
+    </div>
+
+    <div style="margin-bottom:16px">
+      <div style="font-size:.75rem;color:var(--dim);margin-bottom:6px">Mañana quiero...</div>
+      <textarea class="task-input" id="reflection-tomorrow" placeholder="Mañana me propongo..." rows="2"></textarea>
+    </div>
+
+    <button class="close-day-btn" onclick="closeDay()">⚔ Cerrar el Día ⚔</button>
+
+    <div class="divider"></div>
+    <button class="export-btn" onclick="exportWeek()">📜 Exportar Semana a Obsidian (.md)</button>
+  </div>
+
+  <div class="card" id="day-summary" style="display:none">
+    <div class="card-title">Resumen de Hoy</div>
+    <div id="day-summary-content"></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-tab="character" onclick="switchTab('character',this)">
+    <span class="ni">⚔️</span><span>Guerrero</span>
+  </button>
+  <button class="nav-btn" data-tab="habits" onclick="switchTab('habits',this)">
+    <span class="ni">📋</span><span>Hábitos</span>
+  </button>
+  <button class="nav-btn" data-tab="pomodoro" onclick="switchTab('pomodoro',this)">
+    <span class="ni">🍅</span><span>La Forja</span>
+  </button>
+  <button class="nav-btn" data-tab="nutrition" onclick="switchTab('nutrition',this)">
+    <span class="ni">🌿</span><span>Alquimista</span>
+  </button>
+  <button class="nav-btn" data-tab="reflection" onclick="switchTab('reflection',this)">
+    <span class="ni">📖</span><span>Reflexión</span>
+  </button>
+</nav>
+
+<script>
+// ═══════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════
+const RANKS = [
+  {min:1,  max:5,   title:"Peregrino de la Luz"},
+  {min:6,  max:10,  title:"Escudero del Señor"},
+  {min:11, max:20,  title:"Caballero de la Fe"},
+  {min:21, max:30,  title:"Heraldo Celestial"},
+  {min:31, max:50,  title:"Maestro de la Luz"},
+  {min:51, max:75,  title:"Guardián del Verbo"},
+  {min:76, max:99,  title:"Santo Guerrero"},
+  {min:100,max:9999,title:"Paladín del Reino"},
+];
+
+const FIXED_HABITS = [
+  {id:"oracion",    label:"🙏 Oración o lectura espiritual", stat:"espiritu",   xp:20},
+  {id:"pomodoro1",  label:"🍅 Pomodoro x1 mínimo",          stat:"mente",      xp:20},
+  {id:"suplementos",label:"💊 Suplementos de mañana",       stat:"vitalidad",  xp:20},
+  {id:"movimiento", label:"🏃 Movimiento físico",           stat:"fuerza",     xp:20},
+  {id:"crear",      label:"🎨 Crear algo (foto/diseño/vídeo)",stat:"destreza", xp:20},
+  {id:"leer",       label:"📚 Leer o aprender algo",        stat:"mente",      xp:20},
+  {id:"naturaleza", label:"🌿 Contacto con naturaleza",     stat:"espiritu",   xp:20},
+  {id:"dormir",     label:"😴 Dormir +7 horas",             stat:"resistencia",xp:20},
+];
+
+const MAINTENANCE_TASKS = [
+  {id:"org_archivos", label:"🗂️ Organizar archivos del ordenador"},
+  {id:"fotos_dup",    label:"📸 Eliminar fotos duplicadas o descartadas"},
+  {id:"fotos_nube",   label:"☁️ Limpiar fotos de la nube (Google Photos / iCloud)"},
+  {id:"fotos_movil",  label:"📱 Limpiar fotos del teléfono"},
+  {id:"tarjetas",     label:"💾 Vaciar tarjetas de memoria (formatear tras backup)"},
+  {id:"papelera",     label:"🗑️ Vaciar papelera y limpiar descargas"},
+];
+
+const NUTRITION_ITEMS = [
+  {id:"man_fruta",   time:"🌅 Mañana (8:00)",    label:"🍎 Fruta entera",               xp:2},
+  {id:"man_frutos",  time:"🌅 Mañana (8:00)",    label:"🥜 Frutos secos",               xp:2},
+  {id:"man_multi",   time:"🌅 Mañana (8:00)",    label:"💊 Multicentrum Hombre",        xp:3},
+  {id:"man_lambdapil",time:"🌅 Mañana (8:00)",   label:"💊 ISDIN Lambdapil",            xp:3},
+  {id:"man_probio",  time:"🌅 Mañana (8:00)",    label:"💊 Probiótico",                 xp:3},
+  {id:"man_treo",    time:"🌅 Mañana (8:00)",    label:"💊 Treonato de magnesio (opc.)",xp:2},
+  {id:"mm_fruta",    time:"🌤 Media mañana (10:00)",label:"🍌 Fruta + frutos secos",    xp:2},
+  {id:"med_fnuts",   time:"☀️ Mediodía (12:00)",  label:"🥤 Frutos secos o batido proteína",xp:2},
+  {id:"com_omega",   time:"🍽 Comida (14:00)",    label:"💊 Omega-3",                   xp:3},
+  {id:"com_agua",    time:"🍽 Comida (14:00)",    label:"💧 2 vasos de agua",            xp:1},
+  {id:"tar_proteina",time:"🌇 Tarde (17:00)",     label:"🥤 Proteína en polvo",          xp:2},
+  {id:"tar_creatina",time:"🌇 Tarde (17:00)",     label:"💪 Creatina",                  xp:2},
+  {id:"noc_magnesio",time:"🌙 Noche (22:30)",     label:"💊 Bisglicinato de magnesio",  xp:3},
+  {id:"noc_minoxidil",time:"🌙 Noche (22:30)",    label:"🌙 Minoxidil",                 xp:2},
+];
+
+const STATS_CONFIG = [
+  {key:"fuerza",    icon:"⚔️",  label:"Fuerza",     cls:"s-fuerza"},
+  {key:"mente",     icon:"🧠",  label:"Mente",      cls:"s-mente"},
+  {key:"espiritu",  icon:"✨",  label:"Espíritu",   cls:"s-espiritu"},
+  {key:"destreza",  icon:"🎨",  label:"Destreza",   cls:"s-destreza"},
+  {key:"vitalidad", icon:"🌿",  label:"Vitalidad",  cls:"s-vitalidad"},
+  {key:"resistencia",icon:"❤️", label:"Resistencia",cls:"s-resistencia"},
+];
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let state = {};
+
+function defaultState() {
+  return {
+    character: {
+      totalXp: 0,
+      level: 1,
+      stats: {fuerza:0, mente:0, espiritu:0, destreza:0, vitalidad:0, resistencia:0},
+      streak: 0,
+      lastActiveDate: null,
+      lastClosedDate: null,
+    },
+    today: todayStr(),
+    fixedHabits: {},
+    tasks: [],
+    maintenance: {},
+    maintLastReset: null,
+    nutrition: {},
+    pomodoro: {
+      count: 0,
+      consecutive: 0,
+      forgeXp: 0,
+    },
+    reflection: {
+      score: 5,
+      objective: null,
+      today: "",
+      tomorrow: "",
+      closed: false,
+    },
+  };
+}
+
+function todayStr() {
+  return new Date().toISOString().slice(0,10);
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem("kronos_state");
+    if (saved) {
+      state = JSON.parse(saved);
+      // Check if new day
+      if (state.today !== todayStr()) {
+        handleNewDay();
+      }
+    } else {
+      state = defaultState();
+    }
+  } catch(e) {
+    state = defaultState();
+  }
+}
+
+function saveState() {
+  localStorage.setItem("kronos_state", JSON.stringify(state));
+}
+
+function handleNewDay() {
+  const prev = state.today;
+  const today = todayStr();
+
+  // Update streak
+  const prevDate = new Date(prev);
+  const todayDate = new Date(today);
+  const diffDays = Math.round((todayDate - prevDate) / 86400000);
+
+  if (state.reflection && state.reflection.closed) {
+    if (diffDays === 1) {
+      state.character.streak = (state.character.streak || 0) + 1;
+    } else if (diffDays > 1) {
+      state.character.streak = 0;
+    }
+  } else {
+    // Didn't close yesterday - break streak if more than 1 day gap
+    if (diffDays > 1) state.character.streak = 0;
+  }
+
+  // Save lastActiveDate
+  state.character.lastActiveDate = prev;
+
+  // Reset daily stuff
+  state.today = today;
+  state.fixedHabits = {};
+  state.tasks = [];
+  state.nutrition = {};
+  state.pomodoro = {count:0, consecutive:0, forgeXp:0};
+  state.reflection = {score:5, objective:null, today:"", tomorrow:"", closed:false};
+
+  // Reset maintenance on Monday
+  const dayOfWeek = todayDate.getDay(); // 0=Sun,1=Mon
+  if (dayOfWeek === 1) {
+    state.maintenance = {};
+    state.maintLastReset = today;
+  }
+
+  saveState();
+}
+
+// ═══════════════════════════════════════════
+// LEVEL SYSTEM
+// ═══════════════════════════════════════════
+function xpForLevel(lvl) {
+  // XP needed to reach this level from level 1
+  // Level N costs N*100 XP cumulatively
+  let total = 0;
+  for (let i = 1; i < lvl; i++) total += i * 100;
+  return total;
+}
+
+function xpToNextLevel(lvl) {
+  return lvl * 100;
+}
+
+function calcLevel(totalXp) {
+  let lvl = 1;
+  while (xpForLevel(lvl + 1) <= totalXp) lvl++;
+  return lvl;
+}
+
+function getRank(lvl) {
+  for (const r of RANKS) {
+    if (lvl >= r.min && lvl <= r.max) return r.title;
+  }
+  return "Paladín del Reino";
+}
+
+function addXP(amount, label) {
+  const oldLevel = calcLevel(state.character.totalXp);
+  state.character.totalXp += amount;
+  const newLevel = calcLevel(state.character.totalXp);
+  state.character.level = newLevel;
+  saveState();
+  showXpPopup(`+${amount} XP ${label || ""}`);
+  updateCharacterUI();
+  if (newLevel > oldLevel) {
+    setTimeout(() => showLevelUp(newLevel), 800);
+  }
+}
+
+// ═══════════════════════════════════════════
+// PIXEL ART WARRIOR SVG
+// ═══════════════════════════════════════════
+function buildWarriorSVG() {
+  // 14 cols × 22 rows, each pixel = 9px
+  const P = 9, W = 14*P, H = 22*P;
+  const G = "#ffd700", g = "#a87830", S = "#f4c896", E = "#1a3a8a",
+        A = "#4a9eff", a = "#1a4a8a", B = "#c9a84c", L = "#1a2a6a",
+        b = "#0a1a3a", w = "#d0d8e8", X = "#e8f0ff", m = "#c04040",
+        _ = null;
+
+  const rows = [
+    [_,_,_,G,G,G,G,G,G,G,G,_,_,_],  // 0
+    [_,_,g,G,G,G,G,G,G,G,G,g,_,_],  // 1
+    [_,_,g,G,S,S,S,S,S,S,G,g,_,_],  // 2
+    [_,_,g,G,S,E,S,S,S,E,G,g,_,_],  // 3  eyes
+    [_,_,g,G,S,S,S,S,S,S,G,g,_,_],  // 4
+    [_,_,g,G,S,S,m,S,m,S,G,g,_,_],  // 5  mouth
+    [_,_,_,g,G,S,S,S,S,G,g,_,_,_],  // 6  chin
+    [_,_,_,X,A,A,A,A,A,A,X,_,_,_],  // 7  collar
+    [_,w,X,A,A,A,A,A,A,A,A,X,w,_],  // 8  shoulders
+    [_,w,A,A,A,A,A,A,A,A,A,A,w,_],  // 9  chest
+    [_,w,A,a,A,A,A,A,A,A,a,A,w,_],  // 10
+    [_,w,A,a,B,B,B,B,B,B,a,A,w,_],  // 11 belt
+    [_,_,w,A,a,A,A,A,A,a,A,w,_,_],  // 12
+    [_,_,w,L,L,L,_,_,L,L,L,w,_,_],  // 13 legs
+    [_,_,w,L,L,L,_,_,L,L,L,w,_,_],  // 14
+    [_,_,w,L,L,L,_,_,L,L,L,w,_,_],  // 15
+    [_,_,w,L,L,L,_,_,L,L,L,w,_,_],  // 16
+    [_,_,w,b,b,b,_,_,b,b,b,w,_,_],  // 17 boots
+    [_,_,w,b,b,b,_,_,b,b,b,w,_,_],  // 18
+    [_,_,_,b,b,b,_,_,b,b,b,_,_,_],  // 19
+    [_,_,_,b,b,b,_,_,b,b,b,_,_,_],  // 20
+    [_,_,_,_,_,_,_,_,_,_,_,_,_,_],  // 21
+  ];
+
+  let rects = "";
+  for (let y = 0; y < rows.length; y++) {
+    for (let x = 0; x < rows[y].length; x++) {
+      const c = rows[y][x];
+      if (c) rects += `<rect x="${x*P}" y="${y*P}" width="${P}" height="${P}" fill="${c}"/>`;
+    }
+  }
+
+  // Sword on right side
+  const sx = 13*P, sy = 7*P;
+  const swordPixels = [
+    [13,7,X],[13,8,X],[13,9,X],[13,10,X],[13,11,X],
+    [13,12,X],[13,13,X],[13,14,w],[13,15,g],[13,16,g],
+    [12,11,w],[12,12,w],// crossguard
+  ];
+  for (const [px,py,c] of swordPixels) {
+    rects += `<rect x="${px*P}" y="${py*P}" width="${P}" height="${P}" fill="${c}"/>`;
+  }
+
+  // Glow overlay
+  rects += `<ellipse cx="${W/2}" cy="${H*0.6}" rx="${W*0.45}" ry="${H*0.15}" fill="rgba(74,158,255,0.08)"/>`;
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W+P}" height="${H}" viewBox="0 0 ${W+P} ${H}" style="image-rendering:pixelated">${rects}</svg>`;
+}
+
+// ═══════════════════════════════════════════
+// UI UPDATES
+// ═══════════════════════════════════════════
+function updateCharacterUI() {
+  const {totalXp, level, stats, streak} = state.character;
+  const rank = getRank(level);
+  const xpThisLevel = totalXp - xpForLevel(level);
+  const xpNeeded = xpToNextLevel(level);
+  const pct = Math.min(100, (xpThisLevel / xpNeeded) * 100);
+
+  document.getElementById("char-title-text").textContent = rank;
+  document.getElementById("level-badge").textContent = `NIVEL ${level}`;
+  document.getElementById("xp-info").textContent = `${xpThisLevel} / ${xpNeeded} XP`;
+  document.getElementById("xp-bar").style.width = pct + "%";
+  document.getElementById("xp-numbers").textContent = `${totalXp.toLocaleString()} XP totales acumulados`;
+  document.getElementById("streak-val").textContent = streak;
+
+  // Stats grid
+  const grid = document.getElementById("stats-grid");
+  grid.innerHTML = STATS_CONFIG.map(sc => {
+    const val = stats[sc.key] || 0;
+    const barPct = Math.min(100, val);
+    return `<div class="stat-card">
+      <div class="stat-top">
+        <div style="display:flex;align-items:center;gap:5px">
+          <span class="stat-icon">${sc.icon}</span>
+          <span class="stat-label">${sc.label}</span>
+        </div>
+        <span class="stat-value">${val}</span>
+      </div>
+      <div class="stat-bar-bg"><div class="stat-bar-fg ${sc.cls}" style="width:${barPct}%"></div></div>
+    </div>`;
+  }).join("");
+}
+
+function updateHabitsUI() {
+  // Fixed habits
+  const list = document.getElementById("fixed-habits-list");
+  let done = 0;
+  list.innerHTML = FIXED_HABITS.map(h => {
+    const checked = !!state.fixedHabits[h.id];
+    if (checked) done++;
+    return `<div class="habit-item${checked?" done":""}" onclick="toggleHabit('${h.id}')">
+      <div class="habit-cb"></div>
+      <span class="habit-label">${h.label}</span>
+      <span class="habit-xp">+${h.xp} XP</span>
+    </div>`;
+  }).join("");
+  document.getElementById("habits-progress").textContent = `${done}/${FIXED_HABITS.length}`;
+
+  // Maintenance
+  const mList = document.getElementById("maintenance-list");
+  let mDone = 0;
+  mList.innerHTML = MAINTENANCE_TASKS.map(t => {
+    const checked = !!state.maintenance[t.id];
+    if (checked) mDone++;
+    return `<div class="habit-item${checked?" done":""}" onclick="toggleMaintenance('${t.id}')">
+      <div class="habit-cb" style="border-color:#a855f7"></div>
+      <span class="habit-label">${t.label}</span>
+      <span class="habit-xp">+25 XP</span>
+    </div>`;
+  }).join("");
+  document.getElementById("maint-progress").textContent = `${mDone}/${MAINTENANCE_TASKS.length}`;
+
+  // Tasks
+  renderTasks();
+}
+
+function renderTasks() {
+  const ul = document.getElementById("task-list");
+  if (!state.tasks.length) {
+    ul.innerHTML = `<li class="empty-state">No hay misiones activas</li>`;
+    return;
+  }
+  ul.innerHTML = state.tasks.map((t,i) =>
+    `<li class="task-list-item${t.done?" done":""}">
+      <div class="habit-cb" style="width:18px;height:18px;border-color:var(--blue);${t.done?"background:var(--blue)":""}" onclick="toggleTask(${i})">
+        ${t.done?'<span style="color:#000;font-size:.65rem;font-weight:bold">✓</span>':""}
+      </div>
+      <span class="task-text" style="font-size:.82rem;flex:1" onclick="toggleTask(${i})">${escapeHtml(t.text)}</span>
+      <button class="task-del" onclick="deleteTask(${i})">✕</button>
+    </li>`
+  ).join("");
+}
+
+function updateNutritionUI() {
+  const container = document.getElementById("nutrition-list");
+  let groups = {};
+  for (const item of NUTRITION_ITEMS) {
+    if (!groups[item.time]) groups[item.time] = [];
+    groups[item.time].push(item);
+  }
+
+  let totalItems = NUTRITION_ITEMS.length;
+  let doneItems = NUTRITION_ITEMS.filter(i => state.nutrition[i.id]).length;
+
+  document.getElementById("nutr-progress").textContent = `${doneItems}/${totalItems}`;
+  document.getElementById("nutr-bar").style.width = Math.round(doneItems/totalItems*100) + "%";
+
+  let html = "";
+  for (const [time, items] of Object.entries(groups)) {
+    html += `<div class="meal-block">
+      <div class="meal-time-header">
+        <span class="meal-time-badge">${time}</span>
+      </div>`;
+    html += items.map(item => {
+      const done = !!state.nutrition[item.id];
+      return `<div class="nutr-habit${done?" done":""}" onclick="toggleNutrition('${item.id}')">
+        <div class="nutr-cb"></div>
+        <span class="nutr-label">${item.label}</span>
+        <span class="nutr-xp">+${item.xp}</span>
+      </div>`;
+    }).join("");
+    html += `</div>`;
+  }
+  container.innerHTML = html;
+}
+
+function updatePomoUI() {
+  document.getElementById("pomo-today-count").textContent = state.pomodoro.count;
+  document.getElementById("pomo-consec").textContent = state.pomodoro.consecutive;
+  document.getElementById("pomo-total-xp").textContent = state.pomodoro.forgeXp;
+
+  const dots = document.querySelectorAll(".pomo-dot");
+  const consec = state.pomodoro.consecutive % 4;
+  const bonusActive = state.pomodoro.consecutive > 0 && state.pomodoro.consecutive % 4 === 0;
+  dots.forEach((d, i) => {
+    d.className = "pomo-dot";
+    if (bonusActive) {
+      d.classList.add("bonus");
+    } else if (i < consec) {
+      d.classList.add("active");
+    }
+  });
+}
+
+function updateHeaderDate() {
+  const now = new Date();
+  const days = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+  const months = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  document.getElementById("header-date").innerHTML =
+    `<span>${days[now.getDay()]}</span>${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+}
+
+// ═══════════════════════════════════════════
+// INTERACTIONS
+// ═══════════════════════════════════════════
+function toggleHabit(id) {
+  const habit = FIXED_HABITS.find(h => h.id === id);
+  if (!habit) return;
+
+  if (state.fixedHabits[id]) {
+    // Uncheck - don't remove XP (simplified)
+    state.fixedHabits[id] = false;
+  } else {
+    state.fixedHabits[id] = true;
+    state.character.stats[habit.stat] = (state.character.stats[habit.stat] || 0) + 1;
+    addXP(habit.xp, `· ${habit.label.split(" ")[1] || habit.label}`);
+    spawnParticles();
+
+    // Check all habits bonus
+    const allDone = FIXED_HABITS.every(h => state.fixedHabits[h.id]);
+    if (allDone) {
+      setTimeout(() => addXP(50, "· ¡Todos los hábitos! 🎉"), 500);
+    }
+  }
+  saveState();
+  updateHabitsUI();
+}
+
+function toggleMaintenance(id) {
+  if (state.maintenance[id]) {
+    state.maintenance[id] = false;
+  } else {
+    state.maintenance[id] = true;
+    addXP(25, "· Mantenimiento ✓");
+    spawnParticles();
+  }
+  saveState();
+  updateHabitsUI();
+}
+
+function addTask() {
+  const input = document.getElementById("task-input");
+  const text = input.value.trim();
+  if (!text) return;
+  state.tasks.push({text, done: false, type:"work"});
+  input.value = "";
+  saveState();
+  renderTasks();
+}
+
+function toggleTask(i) {
+  const task = state.tasks[i];
+  if (!task) return;
+  if (!task.done) {
+    task.done = true;
+    addXP(10, "· Misión completada ✓");
+    spawnParticles();
+  } else {
+    task.done = false;
+  }
+  saveState();
+  renderTasks();
+}
+
+function deleteTask(i) {
+  state.tasks.splice(i, 1);
+  saveState();
+  renderTasks();
+}
+
+function clearCompletedTasks() {
+  state.tasks = state.tasks.filter(t => !t.done);
+  saveState();
+  renderTasks();
+}
+
+function resetMaintenance() {
+  if (confirm("¿Resetear las tareas de mantenimiento?")) {
+    state.maintenance = {};
+    state.maintLastReset = todayStr();
+    saveState();
+    updateHabitsUI();
+  }
+}
+
+function toggleNutrition(id) {
+  const item = NUTRITION_ITEMS.find(i => i.id === id);
+  if (!item) return;
+  if (state.nutrition[id]) {
+    state.nutrition[id] = false;
+  } else {
+    state.nutrition[id] = true;
+    state.character.stats.vitalidad = (state.character.stats.vitalidad || 0) + 1;
+    addXP(item.xp, "· Alquimia ✓");
+    spawnParticles();
+
+    // Check all supplements bonus
+    const allSupps = NUTRITION_ITEMS.filter(i => i.label.includes("💊")).every(i => state.nutrition[i.id]);
+    if (allSupps) {
+      setTimeout(() => addXP(30, "· ¡Todos los suplementos! ⚗️"), 500);
+    }
+  }
+  saveState();
+  updateNutritionUI();
+}
+
+// ═══════════════════════════════════════════
+// REFLECTION
+// ═══════════════════════════════════════════
+function updateDayScore(val) {
+  state.reflection.score = parseInt(val);
+  document.getElementById("day-score-val").textContent = val;
+  document.getElementById("day-score-label").textContent = val;
+  saveState();
+}
+
+function selectObj(type) {
+  state.reflection.objective = type;
+  saveState();
+  document.querySelectorAll(".obj-btn").forEach(btn => btn.classList.remove("sel"));
+  document.querySelector(`.obj-btn.${type}`).classList.add("sel");
+}
+
+function closeDay() {
+  if (state.reflection.closed) {
+    alert("Ya cerraste el día de hoy. ¡Hasta mañana, guerrero!");
+    return;
+  }
+
+  // Save reflection text
+  state.reflection.today = document.getElementById("reflection-today").value;
+  state.reflection.tomorrow = document.getElementById("reflection-tomorrow").value;
+  state.reflection.closed = true;
+  state.character.streak = (state.character.streak || 0);
+
+  // XP bonus for closing the day
+  const score = state.reflection.score;
+  const bonusXp = score >= 8 ? 30 : score >= 5 ? 15 : 5;
+  addXP(bonusXp, `· Día cerrado (${score}/10) 🌙`);
+
+  saveState();
+
+  // Show summary
+  showDaySummary();
+  spawnParticles();
+  playCompletionSound();
+}
+
+function showDaySummary() {
+  const summary = document.getElementById("day-summary");
+  const content = document.getElementById("day-summary-content");
+  const {totalXp, level, stats, streak} = state.character;
+  const habitsDone = FIXED_HABITS.filter(h => state.fixedHabits[h.id]).length;
+  const tasksDone = state.tasks.filter(t => t.done).length;
+
+  content.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div style="text-align:center;background:rgba(0,0,0,.3);border-radius:8px;padding:10px">
+        <div style="font-family:Georgia,serif;font-size:1.5rem;color:var(--gold2)">${totalXp.toLocaleString()}</div>
+        <div style="font-size:.7rem;color:var(--dim)">XP TOTAL</div>
+      </div>
+      <div style="text-align:center;background:rgba(0,0,0,.3);border-radius:8px;padding:10px">
+        <div style="font-family:Georgia,serif;font-size:1.5rem;color:var(--blue2)">${habitsDone}/${FIXED_HABITS.length}</div>
+        <div style="font-size:.7rem;color:var(--dim)">HÁBITOS</div>
+      </div>
+      <div style="text-align:center;background:rgba(0,0,0,.3);border-radius:8px;padding:10px">
+        <div style="font-family:Georgia,serif;font-size:1.5rem;color:var(--green)">${state.pomodoro.count}</div>
+        <div style="font-size:.7rem;color:var(--dim)">POMODOROS</div>
+      </div>
+      <div style="text-align:center;background:rgba(0,0,0,.3);border-radius:8px;padding:10px">
+        <div style="font-family:Georgia,serif;font-size:1.5rem;color:var(--red)">🔥 ${streak}</div>
+        <div style="font-size:.7rem;color:var(--dim)">RACHA</div>
+      </div>
+    </div>
+    ${state.reflection.today ? `<div style="font-size:.82rem;color:var(--dim);margin-bottom:4px">Reflexión:</div>
+    <div style="font-size:.85rem;font-style:italic;color:var(--text);margin-bottom:10px">"${escapeHtml(state.reflection.today)}"</div>` : ""}
+  `;
+  summary.style.display = "block";
+}
+
+// ═══════════════════════════════════════════
+// POMODORO ENGINE
+// ═══════════════════════════════════════════
+let pomoTimer = null;
+let pomoState = {
+  running: false,
+  mode: "work",    // "work" | "break"
+  remaining: 25*60,
+  total: 25*60,
+};
+
+function togglePomodoro() {
+  if (pomoState.running) {
+    pausePomodoro();
+  } else {
+    startPomodoro();
+  }
+}
+
+function startPomodoro() {
+  pomoState.running = true;
+  document.getElementById("pomo-start-btn").textContent = "⏸ Pausar";
+  document.getElementById("pomo-start-btn").classList.add("primary");
+  pomoTimer = setInterval(tickPomodoro, 1000);
+}
+
+function pausePomodoro() {
+  pomoState.running = false;
+  clearInterval(pomoTimer);
+  document.getElementById("pomo-start-btn").textContent = "▶ Reanudar";
+}
+
+function resetPomodoro() {
+  pausePomodoro();
+  pomoState.mode = "work";
+  pomoState.remaining = 25*60;
+  pomoState.total = 25*60;
+  document.getElementById("pomo-start-btn").textContent = "▶ Iniciar";
+  document.getElementById("pomo-mode-label").textContent = "Concentración";
+  document.getElementById("pomo-ring-progress").style.stroke = "var(--blue)";
+  renderPomoTime();
+  updatePomoRing();
+}
+
+function skipPomodoro() {
+  if (pomoState.mode === "work") {
+    completePomodoroWork();
+  } else {
+    completePomodoroBreak();
+  }
+}
+
+function tickPomodoro() {
+  if (pomoState.remaining <= 0) {
+    if (pomoState.mode === "work") {
+      completePomodoroWork();
+    } else {
+      completePomodoroBreak();
+    }
+    return;
+  }
+  pomoState.remaining--;
+  renderPomoTime();
+  updatePomoRing();
+
+  // Update energy bar
+  const elapsed = pomoState.total - pomoState.remaining;
+  const pct = Math.round((elapsed / pomoState.total) * 100);
+  document.getElementById("energy-bar").style.width = pct + "%";
+  document.getElementById("energy-pct").textContent = pct + "%";
+}
+
+function completePomodoroWork() {
+  clearInterval(pomoTimer);
+  pomoState.running = false;
+  playSound("complete");
+
+  state.pomodoro.count++;
+  state.pomodoro.consecutive++;
+  state.character.stats.mente = (state.character.stats.mente || 0) + 2;
+
+  let xpGain = 15;
+  // Bonus for 4 consecutive
+  if (state.pomodoro.consecutive % 4 === 0) {
+    xpGain *= 2;
+    state.pomodoro.forgeXp += xpGain;
+    addXP(xpGain, "· Pomodoro (×2 Bonus!) 🍅");
+    saveState();
+    updatePomoUI();
+    setTimeout(() => {
+      document.getElementById("bonus-overlay").classList.add("show");
+    }, 500);
+  } else {
+    state.pomodoro.forgeXp += xpGain;
+    addXP(xpGain, "· Pomodoro completado 🍅");
+    saveState();
+    updatePomoUI();
+  }
+
+  // Switch to break
+  pomoState.mode = "break";
+  pomoState.remaining = 5*60;
+  pomoState.total = 5*60;
+  document.getElementById("pomo-mode-label").textContent = "Descanso Sagrado";
+  document.getElementById("pomo-ring-progress").style.stroke = "var(--green)";
+  document.getElementById("pomo-start-btn").textContent = "▶ Iniciar Descanso";
+  document.getElementById("energy-bar").style.width = "0%";
+  document.getElementById("energy-pct").textContent = "0%";
+  renderPomoTime();
+  updatePomoRing();
+}
+
+function completePomodoroBreak() {
+  clearInterval(pomoTimer);
+  pomoState.running = false;
+  playSound("rest");
+
+  addXP(5, "· Descanso completado 🛡");
+  saveState();
+
+  // Switch to work
+  pomoState.mode = "work";
+  pomoState.remaining = 25*60;
+  pomoState.total = 25*60;
+  document.getElementById("pomo-mode-label").textContent = "Concentración";
+  document.getElementById("pomo-ring-progress").style.stroke = "var(--blue)";
+  document.getElementById("pomo-start-btn").textContent = "▶ Nueva Batalla";
+  renderPomoTime();
+  updatePomoRing();
+}
+
+function renderPomoTime() {
+  const m = Math.floor(pomoState.remaining / 60);
+  const s = pomoState.remaining % 60;
+  document.getElementById("pomo-time-display").textContent =
+    String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+}
+
+function updatePomoRing() {
+  const pct = pomoState.remaining / pomoState.total;
+  const circumference = 2 * Math.PI * 90; // ~565
+  const offset = circumference * pct;
+  document.getElementById("pomo-ring-progress").style.strokeDashoffset = offset;
+}
+
+function closeBonusOverlay() {
+  document.getElementById("bonus-overlay").classList.remove("show");
+  // Auto-start break
+  startPomodoro();
+}
+
+// ═══════════════════════════════════════════
+// XP POPUP & LEVEL UP
+// ═══════════════════════════════════════════
+let popupTimeout;
+function showXpPopup(text) {
+  const el = document.getElementById("xp-popup");
+  el.textContent = text;
+  el.classList.add("show");
+  clearTimeout(popupTimeout);
+  popupTimeout = setTimeout(() => el.classList.remove("show"), 2200);
+}
+
+function showLevelUp(level) {
+  playSound("levelup");
+  document.getElementById("lu-level-num").textContent = level;
+  document.getElementById("lu-rank-text").textContent = getRank(level);
+  document.getElementById("levelup-overlay").classList.add("show");
+  for (let i = 0; i < 20; i++) setTimeout(() => spawnParticles(), i * 80);
+}
+
+function closeLevelUp() {
+  document.getElementById("levelup-overlay").classList.remove("show");
+}
+
+// ═══════════════════════════════════════════
+// PARTICLES
+// ═══════════════════════════════════════════
+const PARTS = ["✨","⭐","💫","🌟","✦","◆","▲"];
+function spawnParticles() {
+  for (let i = 0; i < 6; i++) {
+    const el = document.createElement("div");
+    el.className = "particle";
+    el.textContent = PARTS[Math.floor(Math.random()*PARTS.length)];
+    el.style.left = (20 + Math.random()*60) + "%";
+    el.style.top = (30 + Math.random()*40) + "%";
+    el.style.animationDelay = (Math.random()*0.5) + "s";
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2000);
+  }
+}
+
+// ═══════════════════════════════════════════
+// AUDIO (Web Audio API)
+// ═══════════════════════════════════════════
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
+  }
+  return audioCtx;
+}
+
+function playTone(freq, duration, type="sine", vol=0.15) {
+  const ctx = getAudio();
+  if (!ctx) return;
+  try {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    g.gain.setValueAtTime(vol, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    o.start(ctx.currentTime);
+    o.stop(ctx.currentTime + duration);
+  } catch(e){}
+}
+
+function playSound(type) {
+  if (type === "complete") {
+    // Ascending arpeggio
+    [440, 550, 660, 880].forEach((f,i) => setTimeout(() => playTone(f, 0.3, "triangle"), i*100));
+  } else if (type === "rest") {
+    [660, 550, 440].forEach((f,i) => setTimeout(() => playTone(f, 0.3, "sine"), i*120));
+  } else if (type === "levelup") {
+    [262, 330, 392, 523, 659, 784].forEach((f,i) => setTimeout(() => playTone(f, 0.4, "triangle", 0.2), i*80));
+  } else if (type === "xp") {
+    playTone(880, 0.1, "sine", 0.08);
+  }
+}
+
+function playCompletionSound() {
+  [330, 440, 550, 660, 880, 1100].forEach((f,i) => setTimeout(() => playTone(f, 0.5, "triangle", 0.15), i*100));
+}
+
+// ═══════════════════════════════════════════
+// EXPORT TO OBSIDIAN
+// ═══════════════════════════════════════════
+function exportWeek() {
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay() + 1);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+
+  const fmt = d => d.toISOString().slice(0,10);
+  const {totalXp, level, stats, streak} = state.character;
+
+  const habitsDone = FIXED_HABITS.filter(h => state.fixedHabits[h.id]).length;
+  const nutrDone = NUTRITION_ITEMS.filter(i => state.nutrition[i.id]).length;
+  const tasksDone = state.tasks.filter(t => t.done).length;
+
+  const statsStr = STATS_CONFIG.map(sc =>
+    `| ${sc.icon} ${sc.label} | ${stats[sc.key] || 0} |`
+  ).join("\n");
+
+  const habitsStr = FIXED_HABITS.map(h =>
+    `- [${state.fixedHabits[h.id] ? "x" : " "}] ${h.label}`
+  ).join("\n");
+
+  const md = `---
+fecha: ${fmt(now)}
+semana: ${fmt(weekStart)} / ${fmt(weekEnd)}
+nivel: ${level}
+xp_total: ${totalXp}
+racha: ${streak}
+puntuacion_dia: ${state.reflection.score || 0}
+---
+
+# ⚔️ KRONOS — Semana ${fmt(weekStart)}
+
+## 🧙 Estado del Guerrero
+
+| Stat | Valor |
+|------|-------|
+| **Nivel** | ${level} — ${getRank(level)} |
+| **XP Total** | ${totalXp.toLocaleString()} |
+| **Racha** | 🔥 ${streak} días |
+${statsStr}
+
+## 📋 Hábitos del Día
+
+${habitsStr}
+
+**Completados:** ${habitsDone}/${FIXED_HABITS.length}
+
+## 🍅 La Forja (Pomodoros)
+
+- Pomodoros completados: **${state.pomodoro.count}**
+- XP de la Forja: **${state.pomodoro.forgeXp}**
+
+## 🌿 El Alquimista (Nutrición)
+
+- Ítems completados: **${nutrDone}/${NUTRITION_ITEMS.length}**
+
+## ✅ Misiones del Día
+
+- Tareas completadas: **${tasksDone}/${state.tasks.length}**
+${state.tasks.map(t => `- [${t.done?"x":" "}] ${t.text}`).join("\n")}
+
+## 📖 Reflexión
+
+- **Puntuación:** ${state.reflection.score || "—"}/10
+- **Objetivo principal:** ${state.reflection.objective === "si" ? "✅ Sí" : state.reflection.objective === "par" ? "⚡ Parcialmente" : state.reflection.objective === "no" ? "❌ No" : "—"}
+- **Reflexión de hoy:** ${state.reflection.today || "—"}
+- **Propósito de mañana:** ${state.reflection.tomorrow || "—"}
+
+---
+*Exportado desde KRONOS — ${new Date().toLocaleString("es-ES")}*
+`;
+
+  const blob = new Blob([md], {type:"text/markdown;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `KRONOS_${fmt(weekStart)}_${fmt(weekEnd)}.md`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+function switchTab(tabId, btn) {
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("tab-" + tabId).classList.add("active");
+  btn.classList.add("active");
+
+  // Resume audio context on user interaction
+  if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+}
+
+// ═══════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════
+function escapeHtml(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// Keyboard shortcut for task input
+document.addEventListener("DOMContentLoaded", () => {
+  const ti = document.getElementById("task-input");
+  if (ti) ti.addEventListener("keydown", e => { if (e.key === "Enter") addTask(); });
+
+  // Restore reflection UI
+  const slider = document.getElementById("day-score-slider");
+  slider.value = state.reflection.score || 5;
+  document.getElementById("day-score-val").textContent = slider.value;
+  document.getElementById("day-score-label").textContent = slider.value;
+
+  if (state.reflection.objective) {
+    const btn = document.querySelector(`.obj-btn.${state.reflection.objective}`);
+    if (btn) btn.classList.add("sel");
+  }
+
+  document.getElementById("reflection-today").value = state.reflection.today || "";
+  document.getElementById("reflection-tomorrow").value = state.reflection.tomorrow || "";
+
+  if (state.reflection.closed) showDaySummary();
+});
+
+// Save reflection text on input
+["reflection-today","reflection-tomorrow"].forEach(id => {
+  setTimeout(() => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("input", () => {
+      state.reflection[id === "reflection-today" ? "today" : "tomorrow"] = el.value;
+      saveState();
+    });
+  }, 100);
+});
+
+// ═══════════════════════════════════════════
+// MIDNIGHT RESET
+// ═══════════════════════════════════════════
+function checkMidnight() {
+  if (state.today !== todayStr()) handleNewDay();
+}
+setInterval(checkMidnight, 60000);
+
+// ═══════════════════════════════════════════
+// PWA SERVICE WORKER (inline blob)
+// ═══════════════════════════════════════════
+if ("serviceWorker" in navigator) {
+  const swCode = `
+const CACHE = "kronos-v1";
+self.addEventListener("install", e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(["/"])));
+  self.skipWaiting();
+});
+self.addEventListener("activate", e => {
+  e.waitUntil(caches.keys().then(keys =>
+    Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+  ));
+  self.clients.claim();
+});
+self.addEventListener("fetch", e => {
+  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+});
+`;
+  try {
+    const blob = new Blob([swCode], {type:"application/javascript"});
+    const swUrl = URL.createObjectURL(blob);
+    navigator.serviceWorker.register(swUrl).catch(()=>{});
+  } catch(e){}
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+function init() {
+  loadState();
+  document.getElementById("char-svg-container").innerHTML = buildWarriorSVG();
+  updateCharacterUI();
+  updateHabitsUI();
+  updateNutritionUI();
+  updatePomoUI();
+  updateHeaderDate();
+  renderPomoTime();
+  updatePomoRing();
+  setInterval(updateHeaderDate, 60000);
+}
+
+init();
+</script>
+</body>
+</html>
