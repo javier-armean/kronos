@@ -202,6 +202,7 @@ export async function pushCurrentState() {
     state.syncPending = false;
     saveState();
     setSyncStatus("synced");
+    await applySheetFormatting(creds.spreadsheetId);
     return true;
   } catch (e) {
     console.warn("KRONOS Sheets push error:", e);
@@ -238,6 +239,7 @@ export async function pushDayToHistory(dayData) {
       insertDataOption: "INSERT_ROWS",
       resource: { values: [row] },
     });
+    await applySheetFormatting(creds.spreadsheetId);
     return true;
   } catch (e) {
     console.warn("KRONOS Sheets historial error:", e);
@@ -357,6 +359,319 @@ export function setupOfflineRecovery() {
   window.addEventListener("offline", () => {
     if (isConfigured()) setSyncStatus("pending");
   });
+}
+
+// ── APLICAR FORMATO ESTÉTICO A LAS HOJAS ──
+export async function applySheetFormatting(spreadsheetId) {
+  if (!isConnected()) return;
+
+  try {
+    const meta = await gapi.client.sheets.spreadsheets.get({ spreadsheetId });
+    const sheetMap = {};
+    const sheetData = {};
+    meta.result.sheets.forEach(s => {
+      sheetMap[s.properties.title] = s.properties.sheetId;
+      sheetData[s.properties.sheetId] = s;
+    });
+
+    const hex = (h) => ({
+      red: parseInt(h.slice(1, 3), 16) / 255,
+      green: parseInt(h.slice(3, 5), 16) / 255,
+      blue: parseInt(h.slice(5, 7), 16) / 255,
+    });
+
+    const C = {
+      headerBg:     hex("05050f"),
+      gold:         hex("FFD700"),
+      dataBg:       hex("0e0e22"),
+      dataBg2:      hex("12122a"),
+      white:        { red: 1, green: 1, blue: 1 },
+      scoreLowBg:   hex("3d0000"),
+      scoreLowTxt:  hex("ff6b6b"),
+      scoreMidBg:   hex("1a1a2e"),
+      scoreHighBg:  hex("003d1a"),
+      scoreHighTxt: hex("4ade80"),
+      totalsBg:     hex("3d2e00"),
+      redTxt:       { red: 1, green: 0.2, blue: 0.2 },
+    };
+
+    const requests = [];
+
+    // ── Limpiar banding y reglas condicionales existentes (idempotencia) ──
+    const hdId  = sheetMap["historial_diario"];
+    const eaId  = sheetMap["estado_actual"];
+    const habId = sheetMap["habilidades"];
+
+    [eaId, hdId, habId].forEach(sid => {
+      if (sid === undefined) return;
+      const s = sheetData[sid];
+      (s?.bandedRanges || []).forEach(br => {
+        requests.push({ deleteBanding: { bandedRangeId: br.bandedRangeId } });
+      });
+      const rules = s?.conditionalFormats || [];
+      for (let i = rules.length - 1; i >= 0; i--) {
+        requests.push({ deleteConditionalFormatRule: { sheetId: sid, index: i } });
+      }
+    });
+
+    // ── ESTADO_ACTUAL ──
+    if (eaId !== undefined) {
+      const COLS = 10;
+      const goldBorder = { style: "SOLID", color: C.gold };
+
+      requests.push({
+        repeatCell: {
+          range: { sheetId: eaId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: COLS },
+          cell: {
+            userEnteredFormat: {
+              backgroundColor: C.headerBg,
+              textFormat: { foregroundColor: C.gold, bold: true },
+              horizontalAlignment: "CENTER",
+              verticalAlignment: "MIDDLE",
+            },
+          },
+          fields: "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)",
+        },
+      });
+
+      requests.push({
+        updateDimensionProperties: {
+          range: { sheetId: eaId, dimension: "ROWS", startIndex: 0, endIndex: 1 },
+          properties: { pixelSize: 30 },
+          fields: "pixelSize",
+        },
+      });
+
+      requests.push({
+        repeatCell: {
+          range: { sheetId: eaId, startRowIndex: 1, endRowIndex: 2, startColumnIndex: 0, endColumnIndex: COLS },
+          cell: {
+            userEnteredFormat: {
+              backgroundColor: C.dataBg,
+              textFormat: { foregroundColor: C.white },
+              horizontalAlignment: "CENTER",
+            },
+          },
+          fields: "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)",
+        },
+      });
+
+      requests.push({
+        updateBorders: {
+          range: { sheetId: eaId, startRowIndex: 0, endRowIndex: 2, startColumnIndex: 0, endColumnIndex: COLS },
+          top: goldBorder, bottom: goldBorder, left: goldBorder, right: goldBorder,
+          innerHorizontal: goldBorder, innerVertical: goldBorder,
+        },
+      });
+
+      requests.push({
+        autoResizeDimensions: {
+          dimensions: { sheetId: eaId, dimension: "COLUMNS", startIndex: 0, endIndex: COLS },
+        },
+      });
+    }
+
+    // ── HISTORIAL_DIARIO ──
+    if (hdId !== undefined) {
+      const COLS = 17;
+      const DATA_ROWS = 1000;
+
+      requests.push({
+        repeatCell: {
+          range: { sheetId: hdId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: COLS },
+          cell: {
+            userEnteredFormat: {
+              backgroundColor: C.headerBg,
+              textFormat: { foregroundColor: C.gold, bold: true },
+              horizontalAlignment: "CENTER",
+              verticalAlignment: "MIDDLE",
+            },
+          },
+          fields: "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)",
+        },
+      });
+
+      requests.push({
+        updateDimensionProperties: {
+          range: { sheetId: hdId, dimension: "ROWS", startIndex: 0, endIndex: 1 },
+          properties: { pixelSize: 30 },
+          fields: "pixelSize",
+        },
+      });
+
+      // Texto blanco + centrado para todas las filas de datos
+      requests.push({
+        repeatCell: {
+          range: { sheetId: hdId, startRowIndex: 1, endRowIndex: DATA_ROWS, startColumnIndex: 0, endColumnIndex: COLS },
+          cell: {
+            userEnteredFormat: {
+              textFormat: { foregroundColor: C.white },
+              horizontalAlignment: "CENTER",
+            },
+          },
+          fields: "userEnteredFormat(textFormat,horizontalAlignment)",
+        },
+      });
+
+      // Fondo alternado por filas
+      requests.push({
+        addBanding: {
+          bandedRange: {
+            range: { sheetId: hdId, startRowIndex: 1, startColumnIndex: 0, endColumnIndex: COLS },
+            rowProperties: {
+              firstBandColor: C.dataBg,
+              secondBandColor: C.dataBg2,
+            },
+          },
+        },
+      });
+
+      // score_dia (col F, índice 5): formato condicional
+      const scoreRange = [{ sheetId: hdId, startRowIndex: 1, startColumnIndex: 5, endColumnIndex: 6 }];
+      [
+        { vals: ["1", "4"], bg: C.scoreLowBg,  txt: C.scoreLowTxt  },
+        { vals: ["5", "7"], bg: C.scoreMidBg,  txt: C.white        },
+        { vals: ["8", "10"], bg: C.scoreHighBg, txt: C.scoreHighTxt },
+      ].forEach(({ vals, bg, txt }, i) => {
+        requests.push({
+          addConditionalFormatRule: {
+            rule: {
+              ranges: scoreRange,
+              booleanRule: {
+                condition: {
+                  type: "NUMBER_BETWEEN",
+                  values: vals.map(v => ({ userEnteredValue: v })),
+                },
+                format: {
+                  backgroundColor: bg,
+                  textFormat: { foregroundColor: txt },
+                },
+              },
+            },
+            index: i,
+          },
+        });
+      });
+
+      // objetivo_principal (col G, índice 6): si / par / no
+      const objRange = [{ sheetId: hdId, startRowIndex: 1, startColumnIndex: 6, endColumnIndex: 7 }];
+      [
+        { val: "si",  txt: C.scoreHighTxt },
+        { val: "par", txt: C.gold         },
+        { val: "no",  txt: C.redTxt       },
+      ].forEach(({ val, txt }, i) => {
+        requests.push({
+          addConditionalFormatRule: {
+            rule: {
+              ranges: objRange,
+              booleanRule: {
+                condition: { type: "TEXT_EQ", values: [{ userEnteredValue: val }] },
+                format: { textFormat: { foregroundColor: txt } },
+              },
+            },
+            index: 3 + i,
+          },
+        });
+      });
+
+      // Fila TOTALES: cualquier fila donde columna A = "TOTALES"
+      requests.push({
+        addConditionalFormatRule: {
+          rule: {
+            ranges: [{ sheetId: hdId, startRowIndex: 1, startColumnIndex: 0, endColumnIndex: COLS }],
+            booleanRule: {
+              condition: {
+                type: "CUSTOM_FORMULA",
+                values: [{ userEnteredValue: '=$A2="TOTALES"' }],
+              },
+              format: {
+                backgroundColor: C.totalsBg,
+                textFormat: { foregroundColor: C.gold, bold: true },
+              },
+            },
+          },
+          index: 6,
+        },
+      });
+
+      requests.push({
+        autoResizeDimensions: {
+          dimensions: { sheetId: hdId, dimension: "COLUMNS", startIndex: 0, endIndex: COLS },
+        },
+      });
+    }
+
+    // ── HABILIDADES ──
+    if (habId !== undefined) {
+      const COLS = 4;
+      const DATA_ROWS = 1000;
+
+      requests.push({
+        repeatCell: {
+          range: { sheetId: habId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: COLS },
+          cell: {
+            userEnteredFormat: {
+              backgroundColor: C.headerBg,
+              textFormat: { foregroundColor: C.gold, bold: true },
+              horizontalAlignment: "CENTER",
+              verticalAlignment: "MIDDLE",
+            },
+          },
+          fields: "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment)",
+        },
+      });
+
+      requests.push({
+        updateDimensionProperties: {
+          range: { sheetId: habId, dimension: "ROWS", startIndex: 0, endIndex: 1 },
+          properties: { pixelSize: 30 },
+          fields: "pixelSize",
+        },
+      });
+
+      requests.push({
+        repeatCell: {
+          range: { sheetId: habId, startRowIndex: 1, endRowIndex: DATA_ROWS, startColumnIndex: 0, endColumnIndex: COLS },
+          cell: {
+            userEnteredFormat: {
+              backgroundColor: C.dataBg,
+              textFormat: { foregroundColor: C.white },
+              horizontalAlignment: "CENTER",
+            },
+          },
+          fields: "userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)",
+        },
+      });
+
+      // nombre_habilidad (col C, índice 2) en dorado
+      requests.push({
+        repeatCell: {
+          range: { sheetId: habId, startRowIndex: 1, endRowIndex: DATA_ROWS, startColumnIndex: 2, endColumnIndex: 3 },
+          cell: {
+            userEnteredFormat: {
+              textFormat: { foregroundColor: C.gold },
+            },
+          },
+          fields: "userEnteredFormat.textFormat.foregroundColor",
+        },
+      });
+
+      requests.push({
+        autoResizeDimensions: {
+          dimensions: { sheetId: habId, dimension: "COLUMNS", startIndex: 0, endIndex: COLS },
+        },
+      });
+    }
+
+    if (requests.length > 0) {
+      await gapi.client.sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        resource: { requests },
+      });
+    }
+  } catch (e) {
+    console.warn("KRONOS Sheets formatting error:", e);
+  }
 }
 
 // ── OBTENER ÚLTIMA SINCRONIZACIÓN ──
